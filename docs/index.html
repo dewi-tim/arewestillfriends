@@ -72,32 +72,43 @@
             max-width: 768px;
         }
 
+        /* --- buttons ------------------------------------------------- */
         .btn {
             font-family: "Concrette", serif;
             flex: 1 1 230px;
             box-sizing: border-box;
             border: 2px solid #ff99cc;
             padding: 1rem 1.6rem;
-
-            /* ① give it a translucent background so the filter can bite */
-            background: rgba(255, 255, 255, 0.15);
-            /* 15 % white */
-
-            color: #ffffff;
-            /* ② dark text against light backdrop */
-            text-decoration: none;
-            cursor: pointer;
-            transition: all .05s;
             text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform .05s;
+            color: #fff;
+            /* white text again      */
 
-            /* ③ the two vendor spellings */
-            -webkit-backdrop-filter: invert(0.9);
-            backdrop-filter: invert(0.9);
+            /* fallback for browsers WITHOUT backdrop-filter                */
+            background: rgba(0, 0, 0, 0.35);
+            /* slightly darker tint  */
         }
 
+        /* Hover shrink */
         .btn:hover {
             transform: scale(0.9);
         }
+
+        /* --- override when the filter exists ------------------------- */
+        @supports ((-webkit-backdrop-filter:invert(1)) or (backdrop-filter:invert(1))) {
+            .btn {
+                /* the element must stay translucent for the filter to work   */
+                background: rgba(255, 255, 255, 0.18);
+                /* just enough alpha    */
+
+                /* darker than before: full invert + 70 % brightness          */
+                -webkit-backdrop-filter: invert(1) brightness(0.7);
+                backdrop-filter: invert(1) brightness(0.7);
+            }
+        }
+
 
         @media (max-width: 600px) {
             .buttons {
