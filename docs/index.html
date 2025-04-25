@@ -14,21 +14,19 @@
     />
 
     <style>
-      :root {
-        --bg: #fff;
-        --fg: #000;
-        --border: #000;
-        --btn-hover-bg: #000;
-        --btn-hover-fg: #fff;
+      @font-face {
+        font-family: "Concrette";
+        src: url("ConcretteSTRIAL-LightItalic.woff2") format("woff2");
       }
 
       html,
       body {
+        user-select: none;
         margin: 0;
         height: 100%;
         overflow: hidden;
-        background: var(--bg);
-        color: var(--fg);
+        background: #fff;
+        color: #000;
         font-family: "Bodoni Moda", serif;
         font-weight: 700;
       }
@@ -74,27 +72,25 @@
         max-width: 768px;
       }
 
-      /* each button */
       .btn {
-        flex: 1 1 230px; /* row: take as much as needed, min ~230px */
+        font-family: "Concrette", serif;
+        flex: 1 1 230px;
         box-sizing: border-box;
-        border: 2px solid var(--border);
+        border: 2px solid #ff99cc;
         padding: 1rem 1.6rem;
         background: none;
-        color: inherit;
+        color: #fff;
         text-decoration: none;
-        font: inherit;
         cursor: pointer;
-        transition: background 0.25s, color 0.25s;
+        transition: all 0.05s;
         text-align: center;
+        backdrop-filter: invert(0.9);
       }
 
       .btn:hover {
-        background: var(--btn-hover-bg);
-        color: var(--btn-hover-fg);
+        transform: scale(0.9);
       }
 
-      /* mobile portrait (<600 px): stack full-width */
       @media (max-width: 600px) {
         .buttons {
           flex-direction: column;
@@ -102,6 +98,7 @@
         }
         .btn {
           flex: none;
+          padding: 0.7rem;
           width: 100%;
         }
       }
@@ -112,7 +109,6 @@
     <canvas id="c"></canvas>
 
     <div id="overlay">
-      <!-- ▲ your inline logo -->
       <div class="logo">
         <?xml version="1.0" encoding="UTF-8"?>
         <svg
@@ -200,7 +196,6 @@
         </svg>
       </div>
 
-      <!-- ▲ three main buttons -->
       <div class="buttons">
         <a
           class="btn"
