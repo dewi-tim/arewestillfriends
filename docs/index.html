@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ARE WE STILL FRIENDS? — Techno Events</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<!-- ──────────  optional: swap in your own serif  ────────── -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ───  layer order & sizing  ─── */
+html,body{margin:0;height:100%;background:#000;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;image-rendering:pixelated}
+#overlay{position:relative;z-index:1;background:transparent;color:#fff;
+         min-height:100%;display:flex;flex-direction:column;align-items:center;
+         gap:4rem;padding:6vh 2rem 8vh;text-align:center;font-family:"Bodoni Moda",serif}
+
+/* ───  typography & sections  ─── */
+h1{margin:0;font-size:clamp(2rem,6vw,5rem);font-weight:400;letter-spacing:.04em;text-transform:uppercase}
+h2{font-size:1rem;margin:0 0 1rem;letter-spacing:.08em;font-weight:400;text-transform:uppercase}
+.section{max-width:620px;width:100%}
+
+/* donation buttons */
+.donate-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem}
+.donate-links a{padding:.9rem 1.8rem;border:1px solid currentColor;text-decoration:none;color:inherit;
+                letter-spacing:.05em;font-size:.95rem;transition:background .3s,color .3s}
+.donate-links a:hover{background:#fff;color:#000}
+
+/* socials underline */
+.socials p{margin-bottom:.5rem;font-size:.9rem}
+.socials a{text-decoration:none;position:relative}
+.socials a::after{content:'';position:absolute;left:0;bottom:-2px;width:100%;height:1px;background:currentColor;
+                  transform-origin:right;transform:scaleX(0);transition:transform .3s}
+.socials a:hover::after{transform-origin:left;transform:scaleX(1)}
+
+/* timeline */
+.timeline{text-align:left;margin-top:1rem}
+.timeline-item{padding-left:1rem;border-left:2px solid currentColor;margin-bottom:1rem}
+.timeline-item time{display:block;font-size:.8rem;opacity:.7;margin-bottom:.2rem}
+
+@media(max-width:600px){.donate-links a{flex:1 1 100%}}
+</style>
+</head>
+
+<body>
+<canvas id="c"></canvas>
+
+<div id="overlay">
+  <h1>ARE WE STILL FRIENDS?</h1>
+
+  <section class="section donate">
+    <h2>Support the Scene</h2>
+    <div class="donate-links">
+      <a href="https://tikkie.me/pay/your-id" target="_blank" rel="noopener">Tikkie / iDEAL</a>
+      <a href="https://paypal.me/your-id"     target="_blank" rel="noopener">PayPal</a>
+    </div>
+  </section>
+
+  <section class="section socials">
+    <p>follow us for more events</p>
+    <a href="https://instagram.com/arewestillfriends.rave" target="_blank" rel="noopener">
+      @arewestillfriends.rave
+    </a>
+  </section>
+
+  <section class="section timeline">
+    <h2>Event Timeline</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <time datetime="2025-05-10">10 May 2025</time>
+        Koningsdag — Amsterdam//Nieuwendijk
+      </div>
+      <div class="timeline-item">
+        <time datetime="2025-??-??">?? ?? 2025</time>
+        ??? — ??
+      </div>
+      <!-- add more -->
+    </div>
+  </section>
+</div>
+
+<!-- ──────────  ASCII radial-γ + diagonal-triangle shader  ────────── -->
+<script>
+/* CONFIG */
+const SPS_B=12.0,SPS_V=6.3,GAMMA=1;
+
+/* minimalist 5×7 glyph set — expand later if you want full ASCII */
+const font5x7 = [
+  { letter: 'A', code: [
+    ' ### ',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#####',
+    '#   #',
+    '#   #',
+  ] },
+  { letter: 'B', code: [
+    '#### ',
+    '#   #',
+    '#   #',
+    '#### ',
+    '#   #',
+    '#   #',
+    '#### ',
+  ] },
+  { letter: 'C', code: [
+    ' ####',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    ' ####',
+  ] },
+  { letter: 'D', code: [
+    '#### ',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#### ',
+  ] },
+  { letter: 'E', code: [
+    '#####',
+    '#    ',
+    '#    ',
+    '#####',
+    '#    ',
+    '#    ',
+    '#####',
+  ] },
+  { letter: 'F', code: [
+    '#####',
+    '#    ',
+    '#    ',
+    '#####',
+    '#    ',
+    '#    ',
+    '#    ',
+  ] },
+  { letter: 'G', code: [
+    ' ####',
+    '#    ',
+    '#    ',
+    '#  ##',
+    '#   #',
+    '#   #',
+    ' ####',
+  ] },
+  { letter: 'H', code: [
+    '#   #',
+    '#   #',
+    '#   #',
+    '#####',
+    '#   #',
+    '#   #',
+    '#   #',
+  ] },
+  { letter: 'I', code: [
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+  ] },
+  { letter: 'J', code: [
+    '    #',
+    '    #',
+    '    #',
+    '    #',
+    '    #',
+    '    #',
+    '#### ',
+  ] },
+  { letter: 'K', code: [
+    '#   #',
+    '#  # ',
+    '# #  ',
+    '##   ',
+    '# #  ',
+    '#  # ',
+    '#   #',
+  ] },
+  { letter: 'L', code: [
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#####',
+  ] },
+  { letter: 'M', code: [
+    '#   #',
+    '## ##',
+    '# # #',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+  ] },
+  { letter: 'N', code: [
+    '#   #',
+    '##  #',
+    '# # #',
+    '#  ##',
+    '#   #',
+    '#   #',
+    '#   #',
+  ] },
+  { letter: 'O', code: [
+    ' ### ',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: 'P', code: [
+    '#### ',
+    '#   #',
+    '#   #',
+    '#### ',
+    '#    ',
+    '#    ',
+    '#    ',
+  ] },
+  { letter: 'Q', code: [
+    ' ### ',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#  ##',
+    ' ####',
+  ] },
+  { letter: 'R', code: [
+    '#### ',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#### ',
+    '#   #',
+    '#   #',
+  ] },
+  { letter: 'S', code: [
+    ' ####',
+    '#    ',
+    '#    ',
+    ' ### ',
+    '    #',
+    '    #',
+    '#### ',
+  ] },
+  { letter: 'T', code: [
+    '#####',
+    '  #  ',
+    '  #  ',
+    '  #  ',
+    '  #  ',
+    '  #  ',
+    '  #  ',
+  ] },
+  { letter: 'U', code: [
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: 'V', code: [
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    ' # # ',
+    '  #  ',
+  ] },
+  { letter: 'W', code: [
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    '# # #',
+    '## ##',
+    '#   #',
+  ] },
+  { letter: 'X', code: [
+    '#   #',
+    '#   #',
+    ' # # ',
+    '  #  ',
+    ' # # ',
+    '#   #',
+    '#   #',
+  ] },
+  { letter: 'Y', code: [
+    '#   #',
+    '#   #',
+    '#   #',
+    ' ### ',
+    '  #  ',
+    '  #  ',
+    '  #  ',
+  ] },
+  { letter: 'Z', code: [
+    '#####',
+    '    #',
+    '   # ',
+    '  #  ',
+    ' #   ',
+    '#    ',
+    '#####',
+  ] },
+  { letter: 'a', code: [
+    '     ',
+    '     ',
+    ' ### ',
+    '    #',
+    ' ####',
+    '#   #',
+    ' ####',
+  ] },
+  { letter: 'b', code: [
+    '#    ',
+    '#    ',
+    '#### ',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#### ',
+  ] },
+  { letter: 'c', code: [
+    '     ',
+    '     ',
+    ' ### ',
+    '#   #',
+    '#    ',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: 'd', code: [
+    '    #',
+    '    #',
+    ' ####',
+    '#   #',
+    '#   #',
+    '#   #',
+    ' ####',
+  ] },
+  { letter: 'e', code: [
+    '     ',
+    '     ',
+    ' ### ',
+    '#   #',
+    '#####',
+    '#    ',
+    ' ####',
+  ] },
+  { letter: 'f', code: [
+    '  ## ',
+    ' #  #',
+    ' #   ',
+    '###  ',
+    ' #   ',
+    ' #   ',
+    ' #   ',
+  ] },
+  { letter: 'g', code: [
+    '     ',
+    ' ####',
+    '#   #',
+    '#   #',
+    ' ####',
+    '    #',
+    '#### ',
+  ] },
+  { letter: 'h', code: [
+    '#    ',
+    '#    ',
+    '#### ',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+  ] },
+  { letter: 'i', code: [
+    '#    ',
+    '     ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+  ] },
+  { letter: 'j', code: [
+    '    #',
+    '     ',
+    '   ##',
+    '    #',
+    '    #',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: 'k', code: [
+    '#    ',
+    '#    ',
+    '#   #',
+    '#  # ',
+    '###  ',
+    '#  # ',
+    '#   #',
+  ] },
+  { letter: 'l', code: [
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '##   ',
+  ] },
+  { letter: 'm', code: [
+    '     ',
+    '     ',
+    '#### ',
+    '# # #',
+    '# # #',
+    '# # #',
+    '# # #',
+  ] },
+  { letter: 'n', code: [
+    '     ',
+    '     ',
+    '#### ',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+  ] },
+  { letter: 'o', code: [
+    '     ',
+    '     ',
+    ' ### ',
+    '#   #',
+    '#   #',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: 'p', code: [
+    '     ',
+    ' ### ',
+    ' #  #',
+    ' #  #',
+    ' ### ',
+    ' #   ',
+    ' #   ',
+  ] },
+  { letter: 'q', code: [
+    '     ',
+    '     ',
+    '  ###',
+    ' #  #',
+    '  ###',
+    '    #',
+    '    #',
+  ] },
+  { letter: 'r', code: [
+    '     ',
+    '     ',
+    '# ###',
+    '##   ',
+    '#    ',
+    '#    ',
+    '#    ',
+  ] },
+  { letter: 's', code: [
+    '     ',
+    '     ',
+    ' ####',
+    '#    ',
+    ' ### ',
+    '    #',
+    '#### ',
+  ] },
+  { letter: 't', code: [
+    ' #   ',
+    ' #   ',
+    '###  ',
+    ' #   ',
+    ' #   ',
+    ' #   ',
+    '  ## ',
+  ] },
+  { letter: 'u', code: [
+    '     ',
+    '     ',
+    '#   #',
+    '#   #',
+    '#   #',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: 'v', code: [
+    '     ',
+    '     ',
+    '#   #',
+    '#   #',
+    '#   #',
+    ' # # ',
+    '  #  ',
+  ] },
+  { letter: 'w', code: [
+    '     ',
+    '     ',
+    '#   #',
+    '#   #',
+    '# # #',
+    '# # #',
+    ' # # ',
+  ] },
+  { letter: 'x', code: [
+    '     ',
+    '     ',
+    '#   #',
+    ' # # ',
+    '  #  ',
+    ' # # ',
+    '#   #',
+  ] },
+  { letter: 'y', code: [
+    '     ',
+    '     ',
+    '#   #',
+    '#   #',
+    ' ####',
+    '    #',
+    '#### ',
+  ] },
+  { letter: 'z', code: [
+    '     ',
+    '     ',
+    '#####',
+    '   # ',
+    '  #  ',
+    ' #   ',
+    '#####',
+  ] },
+  { letter: '0', code: [
+    ' ### ',
+    '#   #',
+    '#  ##',
+    '# # #',
+    '##  #',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: '1', code: [
+    '##   ',
+    ' #   ',
+    ' #   ',
+    ' #   ',
+    ' #   ',
+    ' #   ',
+    ' #   ',
+  ] },
+  { letter: '2', code: [
+    ' ### ',
+    '#   #',
+    '    #',
+    '  ## ',
+    ' #   ',
+    '#    ',
+    '#####',
+  ] },
+  { letter: '3', code: [
+    '#### ',
+    '    #',
+    '    #',
+    ' ### ',
+    '    #',
+    '    #',
+    '#### ',
+  ] },
+  { letter: '4', code: [
+    '#   #',
+    '#   #',
+    '#   #',
+    '#####',
+    '    #',
+    '    #',
+    '    #',
+  ] },
+  { letter: '5', code: [
+    '#####',
+    '#    ',
+    '#    ',
+    '#### ',
+    '    #',
+    '    #',
+    '#### ',
+  ] },
+  { letter: '6', code: [
+    ' ####',
+    '#    ',
+    '#    ',
+    ' ### ',
+    '#   #',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: '7', code: [
+    '#####',
+    '    #',
+    '    #',
+    '  ## ',
+    ' #   ',
+    ' #   ',
+    ' #   ',
+  ] },
+  { letter: '8', code: [
+    ' ### ',
+    '#   #',
+    '#   #',
+    ' ### ',
+    '#   #',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: '9', code: [
+    ' ### ',
+    '#   #',
+    '#   #',
+    ' ####',
+    '    #',
+    '    #',
+    ' ### ',
+  ] },
+  { letter: '!', code: [
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '#    ',
+    '     ',
+    '#    ',
+  ] },
+
+  { letter: ',', code: [
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '  #  ',
+    ' #   ',
+  ] },
+  { letter: '?', code: [
+    ' ##  ',
+    '#  # ',
+    '   # ',
+    '  #  ',
+    ' #   ',
+    '     ',
+    ' #   ',
+  ] },
+  { letter: '\x01', code: [
+    '     ',
+    ' # # ',
+    ' # # ',
+    '     ',
+    '  #  ',
+    '#   #',
+    ' ### ',
+  ] },
+  { letter: '%', code: [
+    '    #',
+    ' #  #',
+    '   # ',
+    '  #  ',
+    ' #   ',
+    '#  # ',
+    '#    ',
+  ] },
+  { letter: '#', code: [
+    ' # # ',
+    ' # # ',
+    '#####',
+    ' # # ',
+    '#####',
+    ' # # ',
+    ' # # ',
+  ] },
+  { letter: '_', code: [
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '#####',
+  ] },
+  { letter: '-', code: [
+    '     ',
+    '     ',
+    '     ',
+    ' ### ',
+    '     ',
+    '     ',
+    '     ',
+  ] },
+  { letter: ';', code: [
+    '     ',
+    ' #   ',
+    '     ',
+    ' #   ',
+    ' #   ',
+    '#    ',
+    '     ',
+  ] },
+  { letter: '`', code: [
+    ' #   ',
+    ' #   ',
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+  ] },
+  { letter: '=', code: [
+    '     ',
+    '#####',
+    '     ',
+    '     ',
+    '#####',
+    '     ',
+    '     ',
+  ] },
+  { letter: '_', code: [
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '#####',
+  ] },
+  { letter: ':', code: [
+    '     ',
+    ' #   ',
+    '     ',
+    '     ',
+    ' #   ',
+    '     ',
+    '     ',
+  ] },
+  { letter: '<', code: [
+    '   # ',
+    '  #  ',
+    ' #   ',
+    '#    ',
+    ' #   ',
+    '  #  ',
+    '   # ',
+  ] },
+  { letter: '>', code: [
+    ' #   ',
+    '  #  ',
+    '   # ',
+    '    #',
+    '   # ',
+    '  #  ',
+    ' #   ',
+  ] },
+  { letter: '~', code: [
+    '     ',
+    '     ',
+    '# # #',
+    ' # # ',
+    '     ',
+    '     ',
+    '     ',
+  ] },
+  { letter: '*', code: [
+    '  #  ',
+    ' ### ',
+    '  #  ',
+    ' # # ',
+    '     ',
+    '     ',
+    '     ',
+  ] },
+  { letter: '/', code: [
+    '    #',
+    '    #',
+    '   # ',
+    '  #  ',
+    ' #   ',
+    ' #   ',
+    '#    ',
+  ] },
+  { letter: '"', code: [
+    '# #  ',
+    '# #  ',
+    '# #  ',
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+  ] },
+  { letter: '(', code: [
+    '  #  ',
+    ' #   ',
+    '#    ',
+    '#    ',
+    '#    ',
+    ' #   ',
+    '  #  ',
+  ] },
+  { letter: ')', code: [
+    '#    ',
+    ' #   ',
+    '  #  ',
+    '  #  ',
+    '  #  ',
+    ' #   ',
+    '#    ',
+  ] },
+  { letter: '}', code: [
+    '#    ',
+    ' #   ',
+    ' #   ',
+    '  #  ',
+    ' #   ',
+    ' #   ',
+    '#    ',
+  ] },
+  { letter: '{', code: [
+    '  #  ',
+    ' #   ',
+    ' #   ',
+    '#    ',
+    ' #   ',
+    ' #   ',
+    '  #  ',
+  ] },
+  { letter: '+', code: [
+    '     ',
+    '     ',
+    '  #  ',
+    '  #  ',
+    '#####',
+    '  #  ',
+    '  #  ',
+  ] },
+  { letter: '-', code: [
+    '     ',
+    '     ',
+    '     ',
+    '     ',
+    '#####',
+    '     ',
+    '     ',
+  ] },
+];
+
+
+/* -------- build glyph atlas (unchanged from original) ---------- */
+const groups={},CELL={w:5,h:7};
+font5x7.forEach(g=>{
+  const pop=g.code.reduce((s,r)=>s+[...r].filter(c=>c=='#').length,0);
+  (groups[pop]??=[]).push(g);
+});
+Object.keys(groups).forEach(k=>{if(groups[k].length===1)groups[k].push(groups[k][0]);});
+const levels=Object.keys(groups).map(Number).sort((a,b)=>a-b),
+      offs=[],lens=[],atlasList=[];
+levels.forEach(pop=>{offs[pop]=atlasList.length;atlasList.push(...groups[pop]);lens[pop]=groups[pop].length;});
+const MAXB=levels.at(-1),N=atlasList.length,
+      COLS=Math.ceil(Math.sqrt(N)),ROWS=Math.ceil(N/COLS),
+      atlasW=COLS*CELL.w,atlasH=ROWS*CELL.h,atlas=new Uint8Array(atlasW*atlasH);
+atlasList.forEach((g,i)=>{const cx=i%COLS,ry=i/COLS|0;
+  g.code.forEach((row,y)=>[...row].forEach((ch,x)=>{
+    atlas[(ry*CELL.h+y)*atlasW+cx*CELL.w+x]=ch=='#'?255:0;}));});
+
+/* -------------  WebGL2 boilerplate  ------------- */
+const gl=document.getElementById('c').getContext('webgl2',{alpha:false});
+function sh(src,t){const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);
+if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(s);return s;}
+
+const vs=`#version 300 es
+layout(location=0) in vec2 p;
+void main(){gl_Position=vec4(p,0,1);} `;
+
+const fs=`#version 300 es
+precision mediump float;precision mediump int;
+out vec4 o;
+#define MAXB ${MAXB}
+#define GW   ${CELL.w}
+#define GH   ${CELL.h}
+uniform sampler2D A;
+uniform ivec2  G,AG,CELL;
+uniform int    Px;
+uniform float  T,spsB,spsV,gamma,bloom;
+uniform int    offs[MAXB+1];
+uniform int    lens[MAXB+1];
+float radial(ivec2 c){vec2 ctr=vec2(G)*0.5;return length(vec2(c)-ctr);}
+int   diag  (ivec2 c){return c.x+c.y;}
+int tri(int k,int n){int m=k%(2*n);return(m<n)?m:(2*n-m);}
+vec2 dUV(){return 1.0/(vec2(AG)*vec2(CELL));}
+void main(){
+  ivec2 frag=ivec2(gl_FragCoord.xy),gPix=frag/Px,cell=ivec2(gPix.x/GW,gPix.y/GH),loc=ivec2(gPix.x%GW,gPix.y%GH);
+  int bRaw=(int(floor(T*spsB))+int(radial(cell)))%(MAXB+1);
+  float wB=pow(float(bRaw)/float(MAXB),gamma);int b=int(floor(wB*float(MAXB)));
+  int len=lens[b],v=tri(int(floor(T*spsV))+diag(cell),len),idx=offs[b]+v;
+  int cx=idx%AG.x,ry=idx/AG.x;vec2 base=(vec2(cx,ry)*vec2(CELL)+vec2(loc)+0.5)/(vec2(AG)*vec2(CELL)),duv=dUV();
+  float c=texture(A,base).r,glow=0.0;
+  for(int dy=-1;dy<=1;++dy)for(int dx=-1;dx<=1;++dx)if(dx!=0||dy!=0)glow=max(glow,texture(A,base+vec2(dx,dy)*duv).r);
+  float amp=.9+.5*sin(T*6.28318*.3),halo=bloom*glow*amp,core=c*.35,mask=step(0.,c);
+  vec3 col=mix(vec3(core),vec3(1.)*halo,halo*mask);
+  o=vec4(col,1.);
+}`;
+
+const prog=gl.createProgram();
+gl.attachShader(prog,sh(vs,gl.VERTEX_SHADER));
+gl.attachShader(prog,sh(fs,gl.FRAGMENT_SHADER));
+gl.linkProgram(prog);gl.useProgram(prog);
+
+const U={A:gl.getUniformLocation(prog,'A'),G:gl.getUniformLocation(prog,'G'),AG:gl.getUniformLocation(prog,'AG'),
+         CELL:gl.getUniformLocation(prog,'CELL'),Px:gl.getUniformLocation(prog,'Px'),T:gl.getUniformLocation(prog,'T'),
+         spsB:gl.getUniformLocation(prog,'spsB'),spsV:gl.getUniformLocation(prog,'spsV'),
+         gamma:gl.getUniformLocation(prog,'gamma'),offs:gl.getUniformLocation(prog,'offs'),
+         lens:gl.getUniformLocation(prog,'lens')};
+gl.uniform1i(U.A,0);
+gl.uniform2iv(U.AG,[COLS,ROWS]);
+gl.uniform2iv(U.CELL,[CELL.w,CELL.h]);
+gl.uniform1f(U.spsB,SPS_B);
+gl.uniform1f(U.spsV,SPS_V);
+gl.uniform1f(U.gamma,GAMMA);
+gl.uniform1iv(U.offs,new Int32Array(offs));
+gl.uniform1iv(U.lens,new Int32Array(lens));
+gl.uniform1f(gl.getUniformLocation(prog,'bloom'),.2);
+
+/* atlas texture */
+gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+const tex=gl.createTexture();gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D,tex);
+gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,atlasW,atlasH,0,gl.RED,gl.UNSIGNED_BYTE,atlas);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+
+/* full-screen quad */
+const vbo=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,vbo);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1, 1,-1,1,1,-1,1]),gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+
+/* resize logic */
+function resize(){
+  const CELLS_MAX=80,ar=innerWidth/innerHeight;
+  let cols,rows;if(ar>=1){cols=CELLS_MAX;rows=Math.round(cols/ar);}else{rows=CELLS_MAX;cols=Math.round(rows*ar);}
+  let P=Math.floor(innerHeight/(rows*CELL.h));if(P<1)P=1;
+  gl.canvas.width=cols*CELL.w*P;gl.canvas.height=rows*CELL.h*P;gl.viewport(0,0,gl.canvas.width,gl.canvas.height);
+  gl.canvas.style.width=innerWidth+'px';gl.canvas.style.height=innerHeight+'px';
+  gl.uniform2iv(U.G,[cols,rows]);gl.uniform1i(U.Px,P);
+}
+resize();addEventListener('resize',resize);
+
+/* draw loop */
+const t0=performance.now();
+(function loop(){gl.uniform1f(U.T,(performance.now()-t0)*.001);gl.drawArrays(gl.TRIANGLES,0,6);requestAnimationFrame(loop);})();
+</script>
+</body>
+</html>
