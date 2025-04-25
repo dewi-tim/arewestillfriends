@@ -29,16 +29,20 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;image-rendering:p
 /* logo scales to viewport */
 .logo svg{width:clamp(180px,80vw,780px);height:auto;display:block;margin-inline:auto}
 
-/* button row that simply wraps when it runs out of room */
+/* button stack: fills width, keeps a tidy gap */
 .buttons{
   display:flex;
-  gap:1rem;                 /* space between buttons, desktop or phone */
-  flex-wrap:wrap;           /* drop to next line when needed */
-  justify-content:center;   /* keep the row centred */
+  flex-direction:column;   /* vertical stack */
+  gap:1rem;                /* space between buttons */
+  width:100%;              /* stretch to parent width */
+  max-width:420px;         /* optional: cap on very wide screens */
+  margin-inline:auto;      /* center the whole stack */
 }
 
-/* buttons keep their intrinsic width */
+/* each button fills that column */
 .btn{
+  width:100%;
+  box-sizing:border-box;   /* include border in the 100 % */
   border:2px solid var(--border);
   padding:1rem 1.6rem;
   background:none;
@@ -53,6 +57,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;image-rendering:p
   background:var(--btn-hover-bg);
   color:var(--btn-hover-fg);
 }
+
 
 
 /* stack vertically when portrait/narrow */
