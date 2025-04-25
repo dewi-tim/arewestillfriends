@@ -29,17 +29,31 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;image-rendering:p
 /* logo scales to viewport */
 .logo svg{width:clamp(180px,80vw,780px);height:auto;display:block;margin-inline:auto}
 
-/* button row/column */
+/* button row that simply wraps when it runs out of room */
 .buttons{
-  display:flex;gap:2rem;width:100%;max-width:960px;flex-wrap:wrap;justify-content:center
+  display:flex;
+  gap:1rem;                 /* space between buttons, desktop or phone */
+  flex-wrap:wrap;           /* drop to next line when needed */
+  justify-content:center;   /* keep the row centred */
 }
+
+/* buttons keep their intrinsic width */
 .btn{
-  flex:1 1 220px;min-width:140px;
-  border:2px solid var(--border);padding:1rem 1.6rem;
-  background:none;color:inherit;text-decoration:none;font:inherit;cursor:pointer;
-  transition:background .25s,color .25s;text-align:center
+  border:2px solid var(--border);
+  padding:1rem 1.6rem;
+  background:none;
+  color:inherit;
+  text-decoration:none;
+  font:inherit;
+  cursor:pointer;
+  transition:background .25s,color .25s;
 }
-.btn:hover{background:var(--btn-hover-bg);color:var(--btn-hover-fg)}
+
+.btn:hover{
+  background:var(--btn-hover-bg);
+  color:var(--btn-hover-fg);
+}
+
 
 /* stack vertically when portrait/narrow */
 @media(max-width:700px){
@@ -87,7 +101,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;image-rendering:p
 
   <!-- ▲ three main buttons -->
   <div class="buttons">
-    <a class="btn" href="https://tikkie.me/pay/78gveok07bhmvb8ktndt" target="_blank" rel="noopener">tikkie</a>
+    <a class="btn" href="https://tikkie.me/pay/78gveok07bhmvb8ktndt" target="_blank" rel="noopener">donate</a>
     <a class="btn" href="https://instagram.com/arewestillfriends.live"
        target="_blank" rel="noopener">instagram</a>
   </div>
