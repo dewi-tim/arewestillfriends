@@ -9,62 +9,56 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@700&display=swap" rel="stylesheet">
-
 <style>
 :root{
-  --bg:#fff;--fg:#000;--border:#000;
-  --btn-hover-bg:#000;--btn-hover-fg:#fff;
-}
-html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
-  font-family:"Bodoni Moda",serif;font-weight:700}
-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;image-rendering:pixelated}
-
-/* ---------- overlay ---------- */
-#overlay{
-  position:relative;z-index:1;height:100%;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4rem;padding:4vh 2rem;text-align:center;box-sizing:border-box
-}
-
-/* logo scales to viewport */
-.logo svg{width:clamp(180px,80vw,780px);height:auto;display:block;margin-inline:auto}
-
-/* button stack: fills width, keeps a tidy gap */
-.buttons{
-  display:flex;
-  flex-direction:column;   /* vertical stack */
-  gap:1rem;                /* space between buttons */
-  width:100%;              /* stretch to parent width */
-  max-width:420px;         /* optional: cap on very wide screens */
-  margin-inline:auto;      /* center the whole stack */
-}
-
-/* each button fills that column */
-.btn{
-  width:100%;
-  box-sizing:border-box;   /* include border in the 100 % */
-  border:2px solid var(--border);
-  padding:1rem 1.6rem;
-  background:none;
-  color:inherit;
-  text-decoration:none;
-  font:inherit;
-  cursor:pointer;
-  transition:background .25s,color .25s;
-}
-
-.btn:hover{
-  background:var(--btn-hover-bg);
-  color:var(--btn-hover-fg);
-}
-
-
-
-/* stack vertically when portrait/narrow */
-@media(max-width:700px){
-  .buttons{flex-direction:column;gap:1rem}
-  .btn{width:100%}
-}
+    --bg:#fff;--fg:#000;--border:#000;
+    --btn-hover-bg:#000;--btn-hover-fg:#fff;
+  }
+  
+  html,body{
+    margin:0;height:100%;overflow:hidden;
+    background:var(--bg);color:var(--fg);
+    font-family:"Bodoni Moda",serif;font-weight:700;
+  }
+  
+  canvas{
+    position:fixed;inset:0;width:100%;height:100%;
+    z-index:0;image-rendering:pixelated;
+  }
+  
+  /* overlay holds everything and keeps it centered */
+  #overlay{
+    position:relative;z-index:1;height:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3rem;padding:4vh 1rem;box-sizing:border-box;
+  }
+  
+  /* logo scales fluidly */
+  .logo svg{width:clamp(180px,80vw,780px);height:auto;display:block;margin:auto}
+  
+  /* button group */
+  .buttons{
+    display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;
+    width:100%;max-width:768px;
+  }
+  
+  /* each button */
+  .btn{
+    flex:1 1 230px;            /* row: take as much as needed, min ~230px */
+    box-sizing:border-box;
+    border:2px solid var(--border);
+    padding:1rem 1.6rem;
+    background:none;color:inherit;text-decoration:none;font:inherit;
+    cursor:pointer;transition:background .25s,color .25s;text-align:center;
+  }
+  
+  .btn:hover{background:var(--btn-hover-bg);color:var(--btn-hover-fg)}
+  
+  /* mobile portrait (<600 px): stack full-width */
+  @media(max-width:600px){
+    .buttons{flex-direction:column;gap:1rem}
+    .btn{flex:none;width:100%}
+  }
 </style>
 </head>
 
