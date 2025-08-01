@@ -610,23 +610,26 @@ Hey you made it! We are a self-funded startup party DJing and performing live te
 
 [SCHEDULE]
 
-*PRINSENGRACHT* (parade)
+{PRINSENGRACHT} (parade)
 
 10:00-13:00 f/8abt vinyl
 
-*NIEUWENDIJK* (street)
+{NIEUWENDIJK} (street)
 
 14:30-15:30 f/8abt      
 15:30-17:00 martini     
 17:00-end   dewi        
 
+[LINKS]
 Support us on {tikkie}
 Follow us on {instagram}`;
         
         // Link URLs
         const links = {
             'tikkie': 'https://tikkie.me/pay/u53n0oi82pdd9a3eoll6',
-            'instagram': 'https://instagram.com/arewestillfriends'
+            'instagram': 'https://www.instagram.com/arewestillfriends.live/',
+            'PRINSENGRACHT': 'https://maps.app.goo.gl/MidrbMGJzNmrJGGy7',
+            'NIEUWENDIJK': 'https://maps.app.goo.gl/vm8shJZn8MaGgVk87'
         };
         
         function wrapText(text, maxWidth) {
@@ -772,9 +775,9 @@ Follow us on {instagram}`;
                 lineStyles.pop();
             }
             
-            // Always use the full canvas height for centering calculation
+            // Center vertically if content fits, otherwise start at top
             const totalHeight = allLines.length;
-            const startY = Math.max(2, Math.floor((rows - totalHeight) / 2));
+            const startY = totalHeight < rows - 4 ? Math.max(2, Math.floor((rows - totalHeight) / 2)) : 2;
             
             // Convert to positioned text with styles
             const fixedText = [];
@@ -886,10 +889,12 @@ Follow us on {instagram}`;
           vec2 cellCenter=vec2(cell)+0.5;
           vec2 gridCenter=vec2(G)*0.5;
           vec2 dir=cellCenter-gridCenter;
-          float angle=atan(dir.y,dir.x)+3.14159;  // 0 to 2π
-          float angleNorm=angle/(2.0*3.14159);    // 0 to 1
+          // Use atan2 for proper angle calculation (-π to π)
+          float angle=atan(dir.y,dir.x);
+          // Normalize to 0-1 range, ensuring smooth wrapping
+          float angleNorm=(angle+3.14159)/(2.0*3.14159);
           
-          // Interpolate between colors based on angle
+          // Interpolate between colors based on angle (smooth circular interpolation)
           vec3 colorBase;
           float segment=angleNorm*4.0;
           if(segment<1.0){
@@ -899,7 +904,8 @@ Follow us on {instagram}`;
           }else if(segment<3.0){
             colorBase=mixColors(PURPLE,YELLOW,fract(segment));
           }else{
-            colorBase=mixColors(YELLOW,PINK,fract(segment));
+            // Ensure smooth transition back to PINK at the boundary
+            colorBase=mixColors(YELLOW,PINK,smoothstep(0.0,1.0,fract(segment)));
           }
           
           int stepB=int(floor(T*brightnessRate));
@@ -1084,48 +1090,52 @@ Follow us on {instagram}`;
 
         /* resize */
         function resize() {
-            // Smaller fixed cell size for better detail
-            const CELL_SIZE_PX = 2; // Size of each character cell in pixels
+            // Fixed pixel size
+            const CELL_SIZE_PX = 2;
             
-            // Calculate how many cells fit in viewport width
-            let cols = Math.ceil(innerWidth / ((CELL.w + 1) * CELL_SIZE_PX));
+            // Calculate how many cells fit in viewport
+            let cols = Math.floor(innerWidth / ((CELL.w + 1) * CELL_SIZE_PX));
+            let rows = Math.floor(innerHeight / ((CELL.h + 1) * CELL_SIZE_PX));
             
-            // Calculate minimum rows needed for viewport
-            let minRows = Math.ceil(innerHeight / ((CELL.h + 1) * CELL_SIZE_PX));
+            // First, count actual content lines to determine needed height
+            const testParagraphs = textContent.split('\n\n');
+            let estimatedLines = 0;
             
-            // Calculate content bounds with a large canvas to get true content height
-            const testLayout = layoutText(textContent, cols, 1000); // Use large number to get actual layout
-            let minY = 1000;
-            let maxY = 0;
-            testLayout.forEach(item => {
-                minY = Math.min(minY, item.y);
-                maxY = Math.max(maxY, item.y);
-            });
-            
-            // Calculate actual content height
-            const contentRows = maxY - minY + 1;
-            
-            // Use viewport height if content fits, otherwise expand to fit content
-            let rows = minRows;
-            if (contentRows > minRows - 4) { // Leave some margin
-                rows = contentRows + minY + 2; // Include top position and padding
+            for (const paragraph of testParagraphs) {
+                const lines = paragraph.split('\n');
+                for (const line of lines) {
+                    if (line.trim()) {
+                        // Estimate wrapped lines
+                        const wrappedCount = Math.ceil(line.length / (cols - 4));
+                        estimatedLines += wrappedCount;
+                    }
+                }
+                estimatedLines += 1; // Empty line between paragraphs
             }
             
-            // Use fixed pixel size
+            // Calculate rows needed for content plus some margin
+            const contentRows = estimatedLines + 4;
+            const finalRows = Math.max(rows, contentRows);
+            
+            // Use calculated pixel size
             let P = CELL_SIZE_PX;
             
             gl.canvas.width = cols * (CELL.w + 1) * P;
-            gl.canvas.height = rows * (CELL.h + 1) * P;
+            gl.canvas.height = finalRows * (CELL.h + 1) * P;
             gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
             gl.canvas.style.width = innerWidth + "px";
-            gl.canvas.style.height = (rows * (CELL.h + 1) * P) + "px";
+            gl.canvas.style.height = (finalRows * (CELL.h + 1) * P) + "px";
             
-            // Set body height to match canvas
-            document.body.style.minHeight = gl.canvas.style.height;
+            // Disable scrolling if content fits
+            if (finalRows <= rows) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
             
-            gl.uniform2iv(U.G, [cols, rows]);
+            gl.uniform2iv(U.G, [cols, finalRows]);
             gl.uniform1i(U.Px, P);
-            updateTextTexture(cols, rows);
+            updateTextTexture(cols, finalRows);
         }
         resize();
         addEventListener("resize", resize);
